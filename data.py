@@ -1,0 +1,111 @@
+from __future__ import annotations
+
+
+PILOT_CASES = [
+    {
+        "id": "A01_flag_france_capital",
+        "group": "A",
+        "prompt": "The capital of the country whose flag is blue-white-red vertical stripes is",
+        "expected_chain": ["France", "Paris"],
+        "target_token": "last",
+    },
+    {
+        "id": "A02_museums_landmark",
+        "group": "A",
+        "prompt": "The most famous landmark in the capital of the country with the most museums in Europe is",
+        "expected_chain": ["France", "Paris", "Eiffel Tower"],
+        "target_token": "last",
+    },
+    {
+        "id": "A03_colosseum_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing the Colosseum is",
+        "expected_chain": ["Italy", "Rome"],
+        "target_token": "last",
+    },
+    {
+        "id": "A04_sagrada_familia_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing the Sagrada Familia is",
+        "expected_chain": ["Spain", "Madrid"],
+        "target_token": "last",
+    },
+    {
+        "id": "A05_acropolis_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing the Acropolis is",
+        "expected_chain": ["Greece", "Athens"],
+        "target_token": "last",
+    },
+    {
+        "id": "A06_taj_mahal_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing the Taj Mahal is",
+        "expected_chain": ["India", "New Delhi"],
+        "target_token": "last",
+    },
+    {
+        "id": "A07_machu_picchu_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing Machu Picchu is",
+        "expected_chain": ["Peru", "Lima"],
+        "target_token": "last",
+    },
+    {
+        "id": "A08_petra_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing Petra is",
+        "expected_chain": ["Jordan", "Amman"],
+        "target_token": "last",
+    },
+    {
+        "id": "A09_great_wall_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing the Great Wall is",
+        "expected_chain": ["China", "Beijing"],
+        "target_token": "last",
+    },
+    {
+        "id": "A10_angkor_wat_country_capital",
+        "group": "A",
+        "prompt": "The capital of the country containing Angkor Wat is",
+        "expected_chain": ["Cambodia", "Phnom Penh"],
+        "target_token": "last",
+    },
+    {
+        "id": "B01_neuronpedia_multi_hop_animal",
+        "group": "B",
+        "prompt": "The animal that says moo and gives milk is",
+        "expected_chain": ["cow"],
+        "target_token": "last",
+    },
+    {
+        "id": "B02_neuronpedia_secret_word",
+        "group": "B",
+        "prompt": "The secret word is pineapple. Repeat the secret word:",
+        "expected_chain": ["pineapple"],
+        "target_token": "last",
+    },
+    {
+        "id": "B03_neuronpedia_inferring_country",
+        "group": "B",
+        "prompt": "The country whose capital is Tokyo is",
+        "expected_chain": ["Japan"],
+        "target_token": "last",
+    },
+    {
+        "id": "C01_short_ambiguous",
+        "group": "C",
+        "prompt": "It is",
+        "expected_chain": [],
+        "target_token": "last",
+    },
+    {
+        "id": "C02_single_word",
+        "group": "C",
+        "prompt": "Because",
+        "expected_chain": [],
+        "target_token": "last",
+    },
+]
+

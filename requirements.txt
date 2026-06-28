@@ -1,0 +1,12 @@
+torch
+transformers
+accelerate
+huggingface_hub
+numpy
+pyyaml
+safetensors
+httpx
+orjson
+sglang
+git+https://github.com/kitft/nla-inference.git
+git+https://github.com/decoderesearch/circuit-tracer.git
