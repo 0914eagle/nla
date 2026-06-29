@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 
@@ -16,11 +17,10 @@ NLA_AR = "kitft/nla-gemma3-12b-L32-ar"
 # in your server environment if auto-discovery fails.
 DEFAULT_TRANSCODER_SET = "gemma-3-12b-it-gemmascope-2-pt"
 
-OUT_DIR = Path("outputs")
+OUT_DIR = Path(os.environ.get("NLA_OUTPUT_DIR", "outputs")).expanduser()
 ACTIVATION_DIR = OUT_DIR / "activations"
 NLA_DIR = OUT_DIR / "nla"
 ATTRIBUTION_DIR = OUT_DIR / "attribution"
 REPORT_DIR = OUT_DIR / "reports"
 
 DEFAULT_TOKEN_SELECTOR = "last"
-

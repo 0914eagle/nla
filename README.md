@@ -5,8 +5,15 @@ This workspace implements the pilot described in `PILOT_INSTRUCTION.md`.
 ## Install
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
+mkdir -p /data/heejae
+git clone https://github.com/0914eagle/nla.git /home/eagle0914/nla
+cd /home/eagle0914/nla
+
+cp env_nla.example.sh /data/heejae/env_nla.sh
+source /data/heejae/env_nla.sh
+
+conda create -y -p /data/heejae/conda/envs/nla python=3.11
+conda activate /data/heejae/conda/envs/nla
 python -m pip install -U pip setuptools wheel
 pip install -r requirements.txt
 export HF_TOKEN=...
@@ -23,8 +30,10 @@ license is included in `NLA_INFERENCE_LICENSE`.
 If you want to run the NLA AV SGLang server locally, use a separate environment:
 
 ```bash
-python3.11 -m venv .venv-sglang
-source .venv-sglang/bin/activate
+source /data/heejae/env_nla.sh
+conda create -y -p /data/heejae/conda/envs/nla-sglang python=3.11
+conda activate /data/heejae/conda/envs/nla-sglang
+cd /home/eagle0914/nla
 python -m pip install -U pip setuptools wheel
 pip install -r requirements-sglang-server.txt
 ```
@@ -49,6 +58,21 @@ python compare.py
 
 Then open `outputs/reports/pilot_report.md` and fill the manual judgment line for
 each case.
+
+If `NLA_OUTPUT_DIR=/data/heejae/nla_outputs` is set, the report is written to
+`/data/heejae/nla_outputs/reports/pilot_report.md`.
+
+## Persistent Server Environment
+
+Shell `export` values last only for the current login session. To avoid setting
+them manually after every SSH login, add this line to the server user's shell rc
+file:
+
+```bash
+source /data/heejae/env_nla.sh
+```
+
+For bash this is usually `~/.bashrc`; for zsh it is `~/.zshrc`.
 
 ## Notes
 
