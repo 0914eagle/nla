@@ -1,6 +1,8 @@
 # Source this before running the pilot on the server.
-# Code can live in /home/eagle0914/nla; heavy caches, outputs, and conda envs
-# will live under /data/heejae.
+# Code can live in /home/eagle0914/nla; heavy caches, outputs, uv-managed
+# Python installs, and virtualenvs should live under /data/heejae.
+
+export PATH="/data/heejae/bin:$PATH"
 
 export HF_HOME=/data/heejae/huggingface
 export HF_HUB_CACHE=/data/heejae/huggingface/hub
@@ -8,8 +10,9 @@ export TRANSFORMERS_CACHE=/data/heejae/huggingface/transformers
 export TORCH_HOME=/data/heejae/torch
 export XDG_CACHE_HOME=/data/heejae/.cache
 
-export CONDA_PKGS_DIRS=/data/heejae/conda/pkgs
-export CONDA_ENVS_PATH=/data/heejae/conda/envs
+export UV_CACHE_DIR=/data/heejae/uv/cache
+export UV_PYTHON_INSTALL_DIR=/data/heejae/uv/python
+export UV_TOOL_DIR=/data/heejae/uv/tools
 
 export NLA_OUTPUT_DIR=/data/heejae/nla_outputs
 

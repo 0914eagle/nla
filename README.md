@@ -9,7 +9,7 @@ mkdir -p /data/heejae
 git clone https://github.com/0914eagle/nla.git /home/eagle0914/nla
 cd /home/eagle0914/nla
 
-cp env_nla.example.sh /data/heejae/env_nla.sh
+cp env_nla.sh /data/heejae/env_nla.sh
 source /data/heejae/env_nla.sh
 
 conda create -y -p /data/heejae/conda/envs/nla python=3.11
