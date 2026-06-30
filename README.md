@@ -62,10 +62,20 @@ export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all
 
 ```bash
 python setup.py
-python check_alignment.py --skip-transcoder
 python run_nla.py --groups B
 python run_attribution.py
 python compare.py
+```
+
+`run_nla.py` uses the vendored `nla_inference.py`, whose AV path sends requests
+to an SGLang server. Launch SGLang for the AV checkpoint before running NLA
+verbalization, or run only the activation extraction path after adapting the
+script.
+
+The old heavyweight setup/alignment behavior is available separately:
+
+```bash
+python check_alignment.py --skip-transcoder
 ```
 
 Then open `outputs/reports/pilot_report.md` and fill the manual judgment line for

@@ -1,35 +1,42 @@
 from __future__ import annotations
 
 import argparse
-import inspect
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import torch
+from huggingface_hub import snapshot_download
 
-from activation_utils import extract_layer_activation, infer_hook_name, load_nla_meta, load_target_model
+from activation_utils import (
+    extract_layer_activation,
+    infer_hook_name,
+    load_nla_meta,
+    load_target_model,
+    resolve_hf_token,
+)
 from config import ACTIVATION_DIR, NLA_AR, NLA_AV, NLA_DIR, TARGET_LAYER
 from data import PILOT_CASES
 from io_utils import ensure_dirs, save_vector, write_json
 
 
-def build_nla_client() -> Any:
+def resolve_checkpoint_path(repo_or_path: str) -> str:
+    path = Path(repo_or_path).expanduser()
+    if path.exists():
+        return str(path)
+    return snapshot_download(repo_id=repo_or_path, token=resolve_hf_token())
+
+
+def build_nla_client(av_checkpoint: str, sglang_url: str) -> Any:
     from nla_inference import NLAClient
 
-    try:
-        return NLAClient(av=NLA_AV)
-    except TypeError:
-        return NLAClient(NLA_AV)
+    return NLAClient(av_checkpoint, sglang_url=sglang_url)
 
 
-def build_nla_critic() -> Any:
+def build_nla_critic(ar_checkpoint: str, device: str) -> Any:
     from nla_inference import NLACritic
 
-    try:
-        return NLACritic(ar=NLA_AR)
-    except TypeError:
-        return NLACritic(NLA_AR)
+    return NLACritic(ar_checkpoint, device=device)
 
 
 def call_first_available(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
@@ -96,6 +103,10 @@ def main() -> None:
     parser.add_argument("--groups", default="B", help="Comma separated groups to run, e.g. B or A,B,C. Default: B")
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--skip-critic", action="store_true")
+    parser.add_argument("--av-checkpoint", default=NLA_AV)
+    parser.add_argument("--ar-checkpoint", default=NLA_AR)
+    parser.add_argument("--sglang-url", default="http://localhost:30000")
+    parser.add_argument("--critic-device", default="cpu")
     args = parser.parse_args()
 
     ensure_dirs(ACTIVATION_DIR, NLA_DIR)
@@ -107,8 +118,12 @@ def main() -> None:
     meta = load_nla_meta(NLA_AV)
     hook_name = infer_hook_name(meta)
     model, tokenizer = load_target_model()
-    client = build_nla_client()
-    critic = None if args.skip_critic else build_nla_critic()
+    av_checkpoint = resolve_checkpoint_path(args.av_checkpoint)
+    ar_checkpoint = None if args.skip_critic else resolve_checkpoint_path(args.ar_checkpoint)
+    client = build_nla_client(av_checkpoint, args.sglang_url)
+    if ar_checkpoint is None and not args.skip_critic:
+        raise RuntimeError("AR checkpoint resolution failed.")
+    critic = None if args.skip_critic else build_nla_critic(ar_checkpoint, args.critic_device)
 
     rows = []
     for case in cases:
@@ -164,4 +179,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
