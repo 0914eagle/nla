@@ -54,7 +54,8 @@ If circuit-tracer auto-loading cannot find the Gemma-3-12B PLT/GemmaScope-2
 transcoder set, set:
 
 ```bash
-export CIRCUIT_TRACER_TRANSCODER_SET=<exact-transcoder-set-name>
+export CIRCUIT_TRACER_BACKEND=nnsight
+export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all/width_262k_l0_small
 ```
 
 ## Run

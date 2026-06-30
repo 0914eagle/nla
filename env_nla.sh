@@ -16,7 +16,8 @@ export UV_TOOL_DIR=/data/heejae/uv/tools
 export UV_INDEX_STRATEGY=unsafe-best-match
 
 export NLA_OUTPUT_DIR=/data/heejae/nla_outputs
+export CIRCUIT_TRACER_BACKEND=nnsight
 
 # Optional. Set this only after confirming the exact HF repo/path for the
 # Gemma-3-12B-IT PLT transcoder set on the server.
-# export CIRCUIT_TRACER_TRANSCODER_SET=<exact-transcoder-set-name-or-path>
+# export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all/width_262k_l0_small

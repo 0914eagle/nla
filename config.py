@@ -12,10 +12,11 @@ D_MODEL = 3840
 NLA_AV = "kitft/nla-gemma3-12b-L32-av"
 NLA_AR = "kitft/nla-gemma3-12b-L32-ar"
 
-# circuit-tracer's public examples load transcoders by a hub/config name.
-# Set this to the exact Gemma-3-12B PLT/GemmaScope-2 transcoder set available
-# in your server environment if auto-discovery fails.
-DEFAULT_TRANSCODER_SET = "gemma-3-12b-it-gemmascope-2-pt"
+# Gemma-3 PLTs in circuit-tracer-compatible format live under a HF repo subfolder.
+# The circuit-tracer README uses this GemmaScope-2 layout:
+# mwhanna/gemma-scope-2-27b-pt/transcoder_all/width_262k_l0_small
+DEFAULT_TRANSCODER_SET = "mwhanna/gemma-scope-2-12b-it/transcoder_all/width_262k_l0_small"
+DEFAULT_CIRCUIT_TRACER_BACKEND = "nnsight"
 
 OUT_DIR = Path(os.environ.get("NLA_OUTPUT_DIR", "outputs")).expanduser()
 ACTIVATION_DIR = OUT_DIR / "activations"

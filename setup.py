@@ -12,16 +12,25 @@ from activation_utils import (
     load_nla_meta,
     load_target_model,
 )
-from config import ACTIVATION_DIR, DEFAULT_TRANSCODER_SET, NLA_AV, OUT_DIR, TARGET_LAYER, TARGET_MODEL
+from config import (
+    ACTIVATION_DIR,
+    DEFAULT_CIRCUIT_TRACER_BACKEND,
+    DEFAULT_TRANSCODER_SET,
+    NLA_AV,
+    OUT_DIR,
+    TARGET_LAYER,
+    TARGET_MODEL,
+)
 from io_utils import ensure_dirs, save_vector, write_json
 
 
-def load_replacement_model(transcoder_set: str, device: str, dtype: torch.dtype):
+def load_replacement_model(transcoder_set: str, backend: str, device: str, dtype: torch.dtype):
     from circuit_tracer import ReplacementModel
 
     return ReplacementModel.from_pretrained(
         TARGET_MODEL,
         transcoder_set=transcoder_set,
+        backend=backend,
         device=device,
         dtype=dtype,
     )
@@ -48,6 +57,7 @@ def main() -> None:
     parser.add_argument("--token", default="last")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--transcoder-set", default=os.environ.get("CIRCUIT_TRACER_TRANSCODER_SET", DEFAULT_TRANSCODER_SET))
+    parser.add_argument("--backend", default=os.environ.get("CIRCUIT_TRACER_BACKEND", DEFAULT_CIRCUIT_TRACER_BACKEND))
     parser.add_argument("--skip-transcoder", action="store_true")
     args = parser.parse_args()
 
@@ -73,7 +83,7 @@ def main() -> None:
     }
 
     if not args.skip_transcoder:
-        replacement_model = load_replacement_model(args.transcoder_set, args.device, torch.bfloat16)
+        replacement_model = load_replacement_model(args.transcoder_set, args.backend, args.device, torch.bfloat16)
         result["replacement_model"] = validate_transcoder_layer(replacement_model)
 
     write_json(OUT_DIR / "setup_alignment.json", result)
@@ -83,4 +93,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

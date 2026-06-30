@@ -8,30 +8,27 @@ from typing import Any
 import numpy as np
 import torch
 
-from config import ATTRIBUTION_DIR, DEFAULT_TRANSCODER_SET, NLA_DIR, TARGET_LAYER, TARGET_MODEL
+from config import (
+    ATTRIBUTION_DIR,
+    DEFAULT_CIRCUIT_TRACER_BACKEND,
+    DEFAULT_TRANSCODER_SET,
+    NLA_DIR,
+    TARGET_LAYER,
+    TARGET_MODEL,
+)
 from io_utils import ensure_dirs, load_vector, read_json, write_json
 
 
-def load_replacement_model(transcoder_set: str, device: str, dtype: torch.dtype) -> Any:
+def load_replacement_model(transcoder_set: str, backend: str, device: str, dtype: torch.dtype) -> Any:
     from circuit_tracer import ReplacementModel
 
-    attempts = [
-        dict(model_name=TARGET_MODEL, transcoder_set=transcoder_set, device=device, dtype=dtype),
-        dict(model=TARGET_MODEL, transcoders=transcoder_set, device=device, dtype=dtype),
-        dict(model_name=TARGET_MODEL, transcoder_set=transcoder_set),
-        dict(model=TARGET_MODEL, transcoders=transcoder_set),
-        dict(scan=transcoder_set),
-    ]
-    last_error: Exception | None = None
-    for kwargs in attempts:
-        try:
-            return ReplacementModel.from_pretrained(**kwargs)
-        except TypeError as exc:
-            last_error = exc
-    try:
-        return ReplacementModel.from_pretrained(TARGET_MODEL, transcoder_set)
-    except Exception as exc:
-        raise RuntimeError(f"Could not load ReplacementModel. Last TypeError: {last_error}") from exc
+    return ReplacementModel.from_pretrained(
+        model_name=TARGET_MODEL,
+        transcoder_set=transcoder_set,
+        backend=backend,
+        device=device,
+        dtype=dtype,
+    )
 
 
 def import_context_class() -> Any:
@@ -141,11 +138,12 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=20)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--transcoder-set", default=os.environ.get("CIRCUIT_TRACER_TRANSCODER_SET", DEFAULT_TRANSCODER_SET))
+    parser.add_argument("--backend", default=os.environ.get("CIRCUIT_TRACER_BACKEND", DEFAULT_CIRCUIT_TRACER_BACKEND))
     args = parser.parse_args()
 
     ensure_dirs(ATTRIBUTION_DIR)
     rows = read_json(args.nla_results)
-    replacement_model = load_replacement_model(args.transcoder_set, args.device, torch.bfloat16)
+    replacement_model = load_replacement_model(args.transcoder_set, args.backend, args.device, torch.bfloat16)
 
     outputs = []
     for row in rows:
@@ -176,4 +174,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
