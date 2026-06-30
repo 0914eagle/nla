@@ -16,7 +16,13 @@ conda create -y -p /data/heejae/conda/envs/nla python=3.11
 conda activate /data/heejae/conda/envs/nla
 python -m pip install -U pip setuptools wheel
 pip install -r requirements.txt
-export HF_TOKEN=...
+```
+
+Authenticate Hugging Face before running gated Gemma checkpoints:
+
+```bash
+huggingface-cli login
+# or: export HF_TOKEN=...
 ```
 
 If using `uv pip install`, `env_nla.sh` sets `UV_INDEX_STRATEGY=unsafe-best-match`

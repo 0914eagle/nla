@@ -7,7 +7,7 @@ from typing import Any
 
 import torch
 import yaml
-from huggingface_hub import hf_hub_download
+from huggingface_hub import get_token, hf_hub_download
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from config import D_MODEL, NLA_AV, TARGET_LAYER, TARGET_MODEL
@@ -22,21 +22,24 @@ class ActivationRecord:
     hook_name: str
 
 
-def require_hf_token() -> None:
-    if not os.environ.get("HF_TOKEN") and not os.environ.get("HUGGING_FACE_HUB_TOKEN"):
+def resolve_hf_token() -> str:
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN") or get_token()
+    if not token:
         raise RuntimeError(
-            "HF_TOKEN is not set. Gemma-3 is gated, so export HF_TOKEN before running."
+            "No Hugging Face token found. Run `huggingface-cli login` or export HF_TOKEN. "
+            "Gemma-3 is gated, so your token also needs access to google/gemma-3-12b-it."
         )
+    return token
 
 
 def load_target_model(dtype: torch.dtype = torch.bfloat16, device_map: str = "auto") -> tuple[Any, Any]:
-    require_hf_token()
-    tokenizer = AutoTokenizer.from_pretrained(TARGET_MODEL, token=os.environ.get("HF_TOKEN"))
+    token = resolve_hf_token()
+    tokenizer = AutoTokenizer.from_pretrained(TARGET_MODEL, token=token)
     model = AutoModelForCausalLM.from_pretrained(
         TARGET_MODEL,
         torch_dtype=dtype,
         device_map=device_map,
-        token=os.environ.get("HF_TOKEN"),
+        token=token,
         trust_remote_code=True,
     )
     model.eval()
@@ -44,7 +47,7 @@ def load_target_model(dtype: torch.dtype = torch.bfloat16, device_map: str = "au
 
 
 def load_nla_meta(repo_id: str = NLA_AV) -> dict[str, Any]:
-    meta_path = hf_hub_download(repo_id=repo_id, filename="nla_meta.yaml", token=os.environ.get("HF_TOKEN"))
+    meta_path = hf_hub_download(repo_id=repo_id, filename="nla_meta.yaml", token=resolve_hf_token())
     return yaml.safe_load(Path(meta_path).read_text(encoding="utf-8"))
 
 
@@ -127,4 +130,3 @@ def cosine_distance_mse(a: torch.Tensor, b: torch.Tensor) -> float:
     b = b.float().flatten()
     cos = torch.nn.functional.cosine_similarity(a, b, dim=0).item()
     return float(2 * (1 - cos))
-
