@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import os
 from pathlib import Path
 
@@ -56,6 +57,7 @@ def main() -> None:
     parser.add_argument("--prompt", default="The capital of France is")
     parser.add_argument("--token", default="last")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--model-device-map", default=os.environ.get("GEMMA_DEVICE_MAP", "auto"))
     parser.add_argument("--transcoder-set", default=os.environ.get("CIRCUIT_TRACER_TRANSCODER_SET", DEFAULT_TRANSCODER_SET))
     parser.add_argument("--backend", default=os.environ.get("CIRCUIT_TRACER_BACKEND", DEFAULT_CIRCUIT_TRACER_BACKEND))
     parser.add_argument("--skip-transcoder", action="store_true")
@@ -65,9 +67,13 @@ def main() -> None:
 
     meta = load_nla_meta(NLA_AV)
     hook_name = infer_hook_name(meta)
-    model, tokenizer = load_target_model(dtype=torch.bfloat16, device_map="auto")
+    model, tokenizer = load_target_model(dtype=torch.bfloat16, device_map=args.model_device_map)
     record = extract_layer_activation(model, tokenizer, args.prompt, args.token, hook_name=hook_name)
     save_vector(ACTIVATION_DIR / "setup_activation.npy", record.vector)
+    del model, tokenizer
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     result = {
         "target_model": TARGET_MODEL,

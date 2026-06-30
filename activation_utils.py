@@ -32,13 +32,22 @@ def resolve_hf_token() -> str:
     return token
 
 
-def load_target_model(dtype: torch.dtype = torch.bfloat16, device_map: str = "auto") -> tuple[Any, Any]:
+def normalize_device_map(device_map: str | dict[str, str] = "auto") -> str | dict[str, str]:
+    if isinstance(device_map, dict) or device_map == "auto":
+        return device_map
+    return {"": device_map}
+
+
+def load_target_model(
+    dtype: torch.dtype = torch.bfloat16,
+    device_map: str | dict[str, str] = "auto",
+) -> tuple[Any, Any]:
     token = resolve_hf_token()
     tokenizer = AutoTokenizer.from_pretrained(TARGET_MODEL, token=token)
     model = AutoModelForCausalLM.from_pretrained(
         TARGET_MODEL,
-        torch_dtype=dtype,
-        device_map=device_map,
+        dtype=dtype,
+        device_map=normalize_device_map(device_map),
         token=token,
         trust_remote_code=True,
     )
