@@ -19,6 +19,10 @@ pip install -r requirements.txt
 export HF_TOKEN=...
 ```
 
+If using `uv pip install`, `env_nla.sh` sets `UV_INDEX_STRATEGY=unsafe-best-match`
+so uv can resolve PyTorch CUDA wheels from the PyTorch index instead of stopping
+after seeing the CPU/PyPI package name first.
+
 `circuit-tracer` requires Python 3.10 or newer. Python 3.11 is the tested target
 for this requirements set.
 

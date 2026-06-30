@@ -13,6 +13,7 @@ export XDG_CACHE_HOME=/data/heejae/.cache
 export UV_CACHE_DIR=/data/heejae/uv/cache
 export UV_PYTHON_INSTALL_DIR=/data/heejae/uv/python
 export UV_TOOL_DIR=/data/heejae/uv/tools
+export UV_INDEX_STRATEGY=unsafe-best-match
 
 export NLA_OUTPUT_DIR=/data/heejae/nla_outputs
 
