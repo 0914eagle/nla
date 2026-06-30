@@ -20,4 +20,4 @@ export CIRCUIT_TRACER_BACKEND=nnsight
 
 # Optional. Set this only after confirming the exact HF repo/path for the
 # Gemma-3-12B-IT PLT transcoder set on the server.
-# export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all/width_262k_l0_small
+# export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all/width_16k_l0_small

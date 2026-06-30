@@ -15,7 +15,7 @@ NLA_AR = "kitft/nla-gemma3-12b-L32-ar"
 # Gemma-3 PLTs in circuit-tracer-compatible format live under a HF repo subfolder.
 # The circuit-tracer README uses this GemmaScope-2 layout:
 # mwhanna/gemma-scope-2-27b-pt/transcoder_all/width_262k_l0_small
-DEFAULT_TRANSCODER_SET = "mwhanna/gemma-scope-2-12b-it/transcoder_all/width_262k_l0_small"
+DEFAULT_TRANSCODER_SET = "mwhanna/gemma-scope-2-12b-it/transcoder_all/width_16k_l0_small"
 DEFAULT_CIRCUIT_TRACER_BACKEND = "nnsight"
 
 OUT_DIR = Path(os.environ.get("NLA_OUTPUT_DIR", "outputs")).expanduser()

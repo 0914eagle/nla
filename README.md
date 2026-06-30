@@ -55,7 +55,7 @@ transcoder set, set:
 
 ```bash
 export CIRCUIT_TRACER_BACKEND=nnsight
-export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all/width_262k_l0_small
+export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all/width_16k_l0_small
 ```
 
 ## Run
