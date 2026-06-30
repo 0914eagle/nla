@@ -62,6 +62,7 @@ export CIRCUIT_TRACER_TRANSCODER_SET=mwhanna/gemma-scope-2-12b-it/transcoder_all
 
 ```bash
 python setup.py
+python check_alignment.py --skip-transcoder
 python run_nla.py --groups B
 python run_attribution.py
 python compare.py
@@ -88,6 +89,9 @@ For bash this is usually `~/.bashrc`; for zsh it is `~/.zshrc`.
 ## Notes
 
 - Layer 32 is hard-coded in `config.py`.
+- `setup.py` is intentionally lightweight: it checks paths, imports, and HF access only.
+- `check_alignment.py` is the heavy optional validation script that loads Gemma and,
+  unless `--skip-transcoder` is passed, circuit-tracer's `ReplacementModel`.
 - NLA hook metadata is read from `kitft/nla-gemma3-12b-L32-av/nla_meta.yaml`.
 - `run_attribution.py` targets the layer-32 residual direction directly through
   circuit-tracer's attribution context instead of treating the activation as a

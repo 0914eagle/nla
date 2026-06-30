@@ -1,101 +1,100 @@
 from __future__ import annotations
 
 import argparse
-import gc
+import importlib.util
 import os
-from pathlib import Path
+import sys
+from typing import Any
 
-import torch
+from huggingface_hub import get_token, hf_hub_download
 
-from activation_utils import (
-    extract_layer_activation,
-    infer_hook_name,
-    load_nla_meta,
-    load_target_model,
-)
 from config import (
     ACTIVATION_DIR,
+    ATTRIBUTION_DIR,
     DEFAULT_CIRCUIT_TRACER_BACKEND,
     DEFAULT_TRANSCODER_SET,
     NLA_AV,
+    NLA_DIR,
     OUT_DIR,
+    REPORT_DIR,
     TARGET_LAYER,
     TARGET_MODEL,
 )
-from io_utils import ensure_dirs, save_vector, write_json
+from io_utils import ensure_dirs, write_json
 
 
-def load_replacement_model(transcoder_set: str, backend: str, device: str, dtype: torch.dtype):
-    from circuit_tracer import ReplacementModel
+REQUIRED_MODULES = [
+    "torch",
+    "transformers",
+    "accelerate",
+    "huggingface_hub",
+    "safetensors",
+    "yaml",
+    "numpy",
+    "circuit_tracer",
+    "nla_inference",
+]
 
-    return ReplacementModel.from_pretrained(
-        TARGET_MODEL,
-        transcoder_set=transcoder_set,
-        backend=backend,
-        device=device,
-        dtype=dtype,
-    )
+
+def module_available(name: str) -> bool:
+    return importlib.util.find_spec(name) is not None
 
 
-def validate_transcoder_layer(replacement_model) -> dict:
-    cfg = getattr(replacement_model, "cfg", None)
-    n_layers = getattr(cfg, "n_layers", None)
-    if n_layers is not None and TARGET_LAYER >= int(n_layers):
-        raise RuntimeError(f"ReplacementModel has {n_layers} layers; layer {TARGET_LAYER} is unavailable.")
-    transcoders = getattr(replacement_model, "transcoders", None)
+def check_hf_access() -> dict[str, Any]:
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN") or get_token()
+    if not token:
+        return {
+            "ok": False,
+            "message": "No Hugging Face token found. Run `huggingface-cli login` or export HF_TOKEN.",
+        }
+
+    meta_path = hf_hub_download(repo_id=NLA_AV, filename="nla_meta.yaml", token=token)
     return {
-        "backend": getattr(replacement_model, "backend", None),
-        "n_layers": int(n_layers) if n_layers is not None else None,
-        "scan_name": getattr(replacement_model, "scan_name", None),
-        "transcoder_type": type(transcoders).__name__ if transcoders is not None else None,
-        "layer_32_available": n_layers is None or TARGET_LAYER < int(n_layers),
+        "ok": True,
+        "token_source": "env" if os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN") else "huggingface-cli",
+        "nla_meta_path": meta_path,
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Load Gemma/NLA/circuit-tracer and verify layer-32 alignment.")
-    parser.add_argument("--prompt", default="The capital of France is")
-    parser.add_argument("--token", default="last")
-    parser.add_argument("--device", default="cuda")
-    parser.add_argument("--model-device-map", default=os.environ.get("GEMMA_DEVICE_MAP", "auto"))
-    parser.add_argument("--transcoder-set", default=os.environ.get("CIRCUIT_TRACER_TRANSCODER_SET", DEFAULT_TRANSCODER_SET))
-    parser.add_argument("--backend", default=os.environ.get("CIRCUIT_TRACER_BACKEND", DEFAULT_CIRCUIT_TRACER_BACKEND))
-    parser.add_argument("--skip-transcoder", action="store_true")
+    parser = argparse.ArgumentParser(description="Lightweight preflight for the NLA grounding pilot.")
+    parser.add_argument("--skip-hf-check", action="store_true")
     args = parser.parse_args()
 
-    ensure_dirs(OUT_DIR, ACTIVATION_DIR)
+    ensure_dirs(OUT_DIR, ACTIVATION_DIR, NLA_DIR, ATTRIBUTION_DIR, REPORT_DIR)
 
-    meta = load_nla_meta(NLA_AV)
-    hook_name = infer_hook_name(meta)
-    model, tokenizer = load_target_model(dtype=torch.bfloat16, device_map=args.model_device_map)
-    record = extract_layer_activation(model, tokenizer, args.prompt, args.token, hook_name=hook_name)
-    save_vector(ACTIVATION_DIR / "setup_activation.npy", record.vector)
-    del model, tokenizer
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+    modules = {name: module_available(name) for name in REQUIRED_MODULES}
+    missing = [name for name, ok in modules.items() if not ok]
+    hf_access = None if args.skip_hf_check else check_hf_access()
 
     result = {
+        "python": sys.executable,
         "target_model": TARGET_MODEL,
         "target_layer": TARGET_LAYER,
-        "nla_av": NLA_AV,
-        "nla_hook_name": hook_name,
-        "prompt": args.prompt,
-        "token_pos": record.token_pos,
-        "token_text": record.token_text,
-        "activation_norm": float(record.vector.norm().item()),
-        "hf_vs_nla_hook_alignment": "pass_for_resid_post_hidden_states",
-        "replacement_model": None,
+        "out_dir": str(OUT_DIR),
+        "activation_dir": str(ACTIVATION_DIR),
+        "nla_dir": str(NLA_DIR),
+        "attribution_dir": str(ATTRIBUTION_DIR),
+        "report_dir": str(REPORT_DIR),
+        "default_transcoder_set": os.environ.get("CIRCUIT_TRACER_TRANSCODER_SET", DEFAULT_TRANSCODER_SET),
+        "default_circuit_tracer_backend": os.environ.get(
+            "CIRCUIT_TRACER_BACKEND", DEFAULT_CIRCUIT_TRACER_BACKEND
+        ),
+        "modules": modules,
+        "missing_modules": missing,
+        "hf_access": hf_access,
     }
 
-    if not args.skip_transcoder:
-        replacement_model = load_replacement_model(args.transcoder_set, args.backend, args.device, torch.bfloat16)
-        result["replacement_model"] = validate_transcoder_layer(replacement_model)
+    write_json(OUT_DIR / "setup_preflight.json", result)
 
-    write_json(OUT_DIR / "setup_alignment.json", result)
-    print(f"Alignment metadata written to {OUT_DIR / 'setup_alignment.json'}")
-    print(f"Layer {TARGET_LAYER} hook: {hook_name}; token {record.token_pos} {record.token_text!r}")
+    if missing:
+        raise RuntimeError(f"Missing required Python modules: {', '.join(missing)}")
+    if hf_access is not None and not hf_access["ok"]:
+        raise RuntimeError(hf_access["message"])
+
+    print(f"Preflight passed. Wrote {OUT_DIR / 'setup_preflight.json'}")
 
 
 if __name__ == "__main__":
     main()
+
